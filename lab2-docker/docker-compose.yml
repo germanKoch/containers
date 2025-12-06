@@ -45,12 +45,12 @@ services:
     depends_on:
       db:
         condition: service_healthy
-    command:
-      [
-        "bash",
-        "-c",
-        "PGPASSWORD=$$POSTGRES_PASSWORD psql -h db -U $$POSTGRES_USER -d $$POSTGRES_DB -c 'CREATE TABLE IF NOT EXISTS items (id SERIAL PRIMARY KEY, name TEXT);'"
-      ]
+    command: >
+      bash -c "PGPASSWORD=$$POSTGRES_PASSWORD psql -h db -U $$POSTGRES_USER -d $$POSTGRES_DB
+      -v ON_ERROR_STOP=1
+      -c \"CREATE TABLE IF NOT EXISTS items (id SERIAL PRIMARY KEY, name TEXT);
+      TRUNCATE TABLE items;
+      INSERT INTO items (name) VALUES ('item1'), ('item2'), ('item3');\""
     networks:
       - lab2_net
     restart: "no"
