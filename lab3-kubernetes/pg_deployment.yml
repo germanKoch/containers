@@ -39,5 +39,5 @@ spec:
             - name: POSTGRES_DB
               valueFrom:
                 configMapKeyRef:
-                name: postgres-configmap
-                key: POSTGRES_DB
+                  name: postgres-configmap
+                  key: POSTGRES_DB

@@ -38,15 +38,33 @@ spec:
         - name: http
           containerPort: 80
           protocol: TCP
+        livenessProbe:
+          httpGet:
+            path: /status.php
+            port: 80
+          initialDelaySeconds: 60
+          periodSeconds: 30
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /status.php
+            port: 80
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
         env:
         - name: NEXTCLOUD_UPDATE
-          configMapKeyRef:
-            name: nextcloud-configmap
-            key: NEXTCLOUD_UPDATE
+          valueFrom:
+            configMapKeyRef:
+              name: nextcloud-configmap
+              key: NEXTCLOUD_UPDATE
         - name: ALLOW_EMPTY_PASSWORD
-          configMapKeyRef:
-            name: nextcloud-configmap
-            key: ALLOW_EMPTY_PASSWORD
+          valueFrom:
+            configMapKeyRef:
+              name: nextcloud-configmap
+              key: ALLOW_EMPTY_PASSWORD
         - name: POSTGRES_HOST
           value: postgres-service
         - name: POSTGRES_DB
