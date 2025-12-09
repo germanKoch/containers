@@ -118,7 +118,49 @@ env:
 
 ---
 
-## 3. Добавление Liveness и Readiness проб для Nextcloud
+## 3. Создание Service для Nextcloud
+
+### Создан новый манифест: `nextcloud_service.yml`
+
+```yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: nextcloud-service
+  labels:
+    app: nextcloud
+spec:
+  type: NodePort
+  ports:
+   - port: 80
+     targetPort: 80
+     protocol: TCP
+     name: http
+  selector:
+   app: nextcloud
+```
+
+Service типа NodePort позволяет получить доступ к Nextcloud UI с вашего ноутбука без использования Ingress.
+
+### Изменения в `nextcloud.yml`
+
+Обновлена переменная `NEXTCLOUD_TRUSTED_DOMAINS` для поддержки внешнего доступа:
+
+**Было:**
+```yaml
+- name: NEXTCLOUD_TRUSTED_DOMAINS
+  value: "127.0.0.1"
+```
+
+**Стало:**
+```yaml
+- name: NEXTCLOUD_TRUSTED_DOMAINS
+  value: "127.0.0.1 localhost"
+```
+
+---
+
+## 4. Добавление Liveness и Readiness проб для Nextcloud
 
 ### Изменения в `nextcloud.yml`
 
@@ -176,6 +218,7 @@ kubectl apply -f pg_service.yml
 ### 3. Применяем Nextcloud
 ```bash
 kubectl apply -f nextcloud.yml
+kubectl apply -f nextcloud_service.yml
 ```
 ![3](./screenshots/3.png)
 
@@ -184,3 +227,72 @@ kubectl apply -f nextcloud.yml
 kubectl get pods
 ```
 ![4](./screenshots/4.png)
+
+---
+
+## Доступ к Nextcloud UI
+
+### Выполненные действия
+
+#### 1. Создание Service для Nextcloud
+
+**Действия:**
+- Создан новый манифест `nextcloud_service.yml` с определением Service типа `NodePort`
+- Service настроен на проброс порта 80 контейнера Nextcloud на внешний порт кластера
+- Service использует селектор `app: nextcloud` для маршрутизации трафика к подам
+
+**Содержимое `nextcloud_service.yml`:**
+```yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: nextcloud-service
+  labels:
+    app: nextcloud
+spec:
+  type: NodePort
+  ports:
+   - port: 80
+     targetPort: 80
+     protocol: TCP
+     name: http
+  selector:
+   app: nextcloud
+```
+
+**Применение:**
+```bash
+kubectl apply -f nextcloud_service.yml
+```
+
+#### 2. Обновление конфигурации Nextcloud для внешнего доступа
+
+**Действия:**
+- Обновлена переменная окружения `NEXTCLOUD_TRUSTED_DOMAINS` в манифесте `nextcloud.yml`
+- Добавлен `localhost` в список доверенных доменов (ранее был только `127.0.0.1`)
+
+**Изменения в `nextcloud.yml`:**
+```yaml
+# Было:
+- name: NEXTCLOUD_TRUSTED_DOMAINS
+  value: "127.0.0.1"
+
+# Стало:
+- name: NEXTCLOUD_TRUSTED_DOMAINS
+  value: "127.0.0.1 localhost"
+```
+
+**Применение:**
+```bash
+kubectl apply -f nextcloud.yml
+```
+
+#### 3. Проброс порта Service на локальный хост
+Использование `kubectl port-forward` для проброса порта Service на локальный хост:
+
+```bash
+kubectl port-forward svc/nextcloud-service 8080:80
+```
+
+#### 4. Доступ к Nextcloud UI
+![5](./screenshots/5.png)

@@ -79,7 +79,7 @@ spec:
               name: postgres-configmap
               key: POSTGRES_DB
         - name: NEXTCLOUD_TRUSTED_DOMAINS
-          value: "127.0.0.1"
+          value: "127.0.0.1 localhost"
         - name: POSTGRES_USER
           valueFrom:
             secretKeyRef:
