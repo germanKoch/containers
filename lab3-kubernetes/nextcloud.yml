@@ -42,6 +42,9 @@ spec:
           httpGet:
             path: /status.php
             port: 80
+            httpHeaders:
+            - name: Host
+              value: localhost
           initialDelaySeconds: 60
           periodSeconds: 30
           timeoutSeconds: 5
@@ -50,6 +53,9 @@ spec:
           httpGet:
             path: /status.php
             port: 80
+            httpHeaders:
+            - name: Host
+              value: localhost
           initialDelaySeconds: 30
           periodSeconds: 10
           timeoutSeconds: 5
