@@ -1,0 +1,101 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web
+  labels:
+    app: lab2
+    component: web
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: lab2
+      component: web
+  template:
+    metadata:
+      labels:
+        app: lab2
+        component: web
+    spec:
+      initContainers:
+      - name: init-db
+        image: postgres:16
+        command:
+        - /bin/bash
+        - -c
+        - |
+          set -e
+          echo "Waiting for database to be ready..."
+          until PGPASSWORD=$POSTGRES_PASSWORD psql -h postgres-service -U $POSTGRES_USER -d $POSTGRES_DB -c '\q' 2>/dev/null; do
+            echo "Database is unavailable - sleeping"
+            sleep 2
+          done
+          echo "Database is ready - initializing schema and data..."
+          PGPASSWORD=$POSTGRES_PASSWORD psql -h postgres-service -U $POSTGRES_USER -d $POSTGRES_DB -v ON_ERROR_STOP=1 <<EOF
+          CREATE TABLE IF NOT EXISTS items (id SERIAL PRIMARY KEY, name TEXT);
+          TRUNCATE TABLE items;
+          INSERT INTO items (name) VALUES ('item1'), ('item2'), ('item3');
+          EOF
+          echo "Database initialization completed!"
+        env:
+        - name: POSTGRES_USER
+          valueFrom:
+            secretKeyRef:
+              name: postgres-secret
+              key: POSTGRES_USER
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: postgres-secret
+              key: POSTGRES_PASSWORD
+        - name: POSTGRES_DB
+          valueFrom:
+            secretKeyRef:
+              name: postgres-secret
+              key: POSTGRES_DB
+      containers:
+      - name: web
+        image: lab2_flask_app:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 5000
+          name: http
+        env:
+        - name: POSTGRES_USER
+          valueFrom:
+            secretKeyRef:
+              name: postgres-secret
+              key: POSTGRES_USER
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: postgres-secret
+              key: POSTGRES_PASSWORD
+        - name: POSTGRES_DB
+          valueFrom:
+            secretKeyRef:
+              name: postgres-secret
+              key: POSTGRES_DB
+        - name: DB_HOST
+          value: postgres-service
+        command: ["python", "app.py"]
+        livenessProbe:
+          exec:
+            command:
+            - /bin/sh
+            - -c
+            - python -c "import urllib.request; urllib.request.urlopen('http://localhost:5000/').read()"
+          initialDelaySeconds: 30
+          periodSeconds: 30
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          exec:
+            command:
+            - /bin/sh
+            - -c
+            - python -c "import urllib.request; urllib.request.urlopen('http://localhost:5000/').read()"
+          initialDelaySeconds: 10
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
