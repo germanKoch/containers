@@ -18,6 +18,7 @@
 │   └── requirements.txt
 ├── Dockerfile.bad
 ├── Dockerfile.good
+├── docker-compose.yml
 ├── README.md
 ├── .dockerignore
 └── .gitignore
@@ -107,6 +108,18 @@ CMD ["python", "app.py"]
 
 ## Сборка и запуск
 
+### Вариант 1: Использование docker-compose (рекомендуется)
+
+```bash
+# Сборка и запуск с volume
+docker-compose up -d --build
+
+# Остановка
+docker-compose down
+```
+
+### Вариант 2: Использование docker run
+
 ```bash
 # Сборка
 docker build -f Dockerfile.bad -t lab1-bad .
@@ -114,7 +127,12 @@ docker build -f Dockerfile.good -t lab1-good .
 
 # Запуск (обязательно с volume)
 docker run -d -p 5000:5000 -v labdata:/app/data lab1-good
+
+# Проверка работы
+curl http://localhost:5000
 ```
+
+**Важно:** Volume `labdata` монтируется в `/app/data` внутри контейнера для сохранения данных между перезапусками контейнера.
 
 ---
 

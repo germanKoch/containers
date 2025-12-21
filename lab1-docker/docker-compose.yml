@@ -1,0 +1,16 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile.good
+    ports:
+      - "5000:5000"
+    volumes:
+      - labdata:/app/data
+    restart: unless-stopped
+
+volumes:
+  labdata:
+
