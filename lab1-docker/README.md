@@ -91,6 +91,8 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY app/ .
 
+VOLUME /app/data
+
 EXPOSE 5000
 
 CMD ["python", "app.py"]
@@ -103,6 +105,7 @@ CMD ["python", "app.py"]
 3. Оптимизирован порядок `COPY` для использования кэша.
 4. `--no-cache-dir` уменьшает размер образа.
 5. Копируются только нужные файлы (`app/`).
+6. Добавлена директива `VOLUME /app/data` для явного указания точки монтирования volume.
 
 ---
 
